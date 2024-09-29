@@ -1,3 +1,3 @@
-module github.com/zuchi/kml-go/v1
+module github.com/zuchi/kml-go
 
 go 1.19

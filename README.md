@@ -21,5 +21,5 @@ Installing the package is pretty simple, you just need to execute the
 following `go get` command:
 
 ```
-go get github.com/zuchi/kml-reader@latest
+go get github.com/zuchi/kml-reader
 ```

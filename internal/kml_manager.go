@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/zuchi/kml-go/v1/models"
-	"github.com/zuchi/kml-go/v1/models/kml"
+	"github.com/zuchi/kml-go/models"
+	"github.com/zuchi/kml-go/models/kml"
 )
 
 var (
