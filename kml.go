@@ -3,8 +3,8 @@ package kml
 import (
 	"io"
 
-	"github.com/zuchi/kml-go/internal"
-	"github.com/zuchi/kml-go/models/kml"
+	"github.com/zuchi/kml-reader/internal"
+	"github.com/zuchi/kml-reader/models/kml"
 )
 
 type KmlReader interface {
