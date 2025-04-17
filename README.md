@@ -1,6 +1,6 @@
 
 # kml-reader
-
+A fork of github.com/zuchi/kml-reader
 <!--toc:start-->
 - [kml-reader](#kml-reader)
   - [Installation](#installation)

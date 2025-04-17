@@ -2,7 +2,15 @@ package models
 
 import (
 	"encoding/xml"
+	"errors"
+	"io"
+	"strconv"
+	"strings"
 	"time"
+)
+
+var (
+	ErrInvalidCoordinatesString = errors.New("invalid coordinates format")
 )
 
 // KML represents the root element of a KML document.
@@ -34,17 +42,21 @@ type Folder struct {
 
 // Placemark represents a KML Placemark element.
 type Placemark struct {
-	Name        string      `xml:"name,omitempty"`
-	Description string      `xml:"description,omitempty"`
-	Point       *Point      `xml:"Point,omitempty"`
-	LineString  *LineString `xml:"LineString,omitempty"`
-	Polygon     *Polygon    `xml:"Polygon,omitempty"`
+	Name          string         `xml:"name,omitempty"`
+	Description   string         `xml:"description,omitempty"`
+	Point         *Point         `xml:"Point,omitempty"`
+	LineString    *LineString    `xml:"LineString,omitempty"`
+	Polygon       *Polygon       `xml:"Polygon,omitempty"`
+	MultiGeometry *MultiGeometry `xml:"MultiGeometry,omitempty"`
 	// Add more geometry types as necessary
 }
 
-// Point represents a KML Point element.
-type Point struct {
-	Coordinates string `xml:"coordinates"`
+// MultiGeometry represents a KML MultiGeometry element.
+type MultiGeometry struct {
+	Point      *Point      `xml:"Point,omitempty"`
+	LineString *LineString `xml:"LineString,omitempty"`
+	Polygon    *Polygon    `xml:"Polygon,omitempty"`
+	// Add more geometry types as necessary
 }
 
 // LineString represents a KML LineString element.
@@ -60,7 +72,7 @@ type Polygon struct {
 
 // Boundary represents a LinearRing element in a KML Polygon.
 type Boundary struct {
-	Coordinates string `xml:"coordinates"`
+	Coordinates []Point
 }
 
 // CoordinatesType represents a list of coordinates.
@@ -162,4 +174,84 @@ type Lod struct {
 	MaxLodPixels  float64 `xml:"maxLodPixels"`
 	MinFadeExtent float64 `xml:"minFadeExtent"`
 	MaxFadeExtent float64 `xml:"maxFadeExtent"`
+}
+
+type Point struct {
+	Latitude  float64
+	Longitude float64
+	Altitude  float64
+}
+
+func (p *Point) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	var coordinates string
+	var err error
+	var tok xml.Token
+	for tok, err = d.Token(); err == nil; tok, err = d.Token() {
+		if start, ok := tok.(xml.StartElement); ok && start.Name.Local == "coordinates" {
+			if err := d.DecodeElement(&coordinates, &start); err != nil {
+				return err
+			}
+			tok, err = d.Token()
+		} else if tok, ok := tok.(xml.EndElement); ok && tok.Name.Local == "coordinates" {
+			break
+		}
+	}
+	if err != nil && err != io.EOF {
+		return err
+	}
+
+	return p.parseCoordinates(coordinates)
+}
+
+func (p *Point) parseCoordinates(coordinates string) error {
+	parts := strings.Split(strings.TrimSpace(coordinates), ",")
+	if len(parts) != 3 {
+		return ErrInvalidCoordinatesString
+	}
+	var err error
+	p.Latitude, err = strconv.ParseFloat(parts[0], 64)
+	if err != nil {
+		return err
+	}
+	p.Longitude, err = strconv.ParseFloat(parts[1], 64)
+	if err != nil {
+		return err
+	}
+	p.Altitude, err = strconv.ParseFloat(parts[2], 64)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b *Boundary) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	var coordinates string
+	var err error
+	var tok xml.Token
+	for tok, err = d.Token(); err == nil; tok, err = d.Token() {
+		if start, ok := tok.(xml.StartElement); ok && start.Name.Local == "coordinates" {
+			if err := d.DecodeElement(&coordinates, &start); err != nil {
+				return err
+			}
+			tok, err = d.Token()
+		} else if tok, ok := tok.(xml.EndElement); ok && tok.Name.Local == "coordinates" {
+			break
+		}
+	}
+	if err != nil && err != io.EOF {
+		return err
+	}
+
+	return b.parseCoordinates(coordinates)
+}
+
+func (b *Boundary) parseCoordinates(coordinates string) error {
+	pointsCoordinates := strings.Split(strings.TrimSpace(coordinates), " ")
+	b.Coordinates = make([]Point, len(pointsCoordinates))
+	for i, point := range pointsCoordinates {
+		if err := b.Coordinates[i].parseCoordinates(point); err != nil {
+			return err
+		}
+	}
+	return nil
 }
