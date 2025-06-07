@@ -209,11 +209,11 @@ func (p *Point) parseCoordinates(coordinates string) error {
 		return ErrInvalidCoordinatesString
 	}
 	var err error
-	p.Latitude, err = strconv.ParseFloat(parts[0], 64)
+	p.Longitude, err = strconv.ParseFloat(parts[0], 64)
 	if err != nil {
 		return err
 	}
-	p.Longitude, err = strconv.ParseFloat(parts[1], 64)
+	p.Latitude, err = strconv.ParseFloat(parts[1], 64)
 	if err != nil {
 		return err
 	}
@@ -249,6 +249,10 @@ func (b *Boundary) parseCoordinates(coordinates string) error {
 	pointsCoordinates := strings.Split(strings.TrimSpace(coordinates), " ")
 	b.Coordinates = make([]Point, len(pointsCoordinates))
 	for i, point := range pointsCoordinates {
+		trimmed := strings.TrimSpace(point)
+		if trimmed == "" {
+			continue
+		}
 		if err := b.Coordinates[i].parseCoordinates(point); err != nil {
 			return err
 		}
