@@ -247,15 +247,17 @@ func (b *Boundary) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 
 func (b *Boundary) parseCoordinates(coordinates string) error {
 	pointsCoordinates := strings.Split(strings.TrimSpace(coordinates), " ")
-	b.Coordinates = make([]Point, len(pointsCoordinates))
-	for i, point := range pointsCoordinates {
-		trimmed := strings.TrimSpace(point)
+	b.Coordinates = make([]Point, 0, len(pointsCoordinates))
+	for _, point := range pointsCoordinates {
+		trimmed := strings.Trim(point, " \t\n\r")
 		if trimmed == "" {
 			continue
 		}
-		if err := b.Coordinates[i].parseCoordinates(point); err != nil {
+		var p Point
+		if err := p.parseCoordinates(point); err != nil {
 			return err
 		}
+		b.Coordinates = append(b.Coordinates, p)
 	}
 	return nil
 }
