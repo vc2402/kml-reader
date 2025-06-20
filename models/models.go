@@ -37,6 +37,7 @@ type Folder struct {
 	Name        string      `xml:"name,omitempty"`
 	Description string      `xml:"description,omitempty"`
 	Placemarks  []Placemark `xml:"Placemark"`
+	Folders     []*Folder   `xml:"Folder,omitempty"`
 	// Add more elements as necessary
 }
 
